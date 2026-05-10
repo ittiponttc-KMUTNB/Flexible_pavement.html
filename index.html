@@ -480,7 +480,7 @@
       <div style="background:#fff;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#1a1d27;font-family:'IBM Plex Mono',monospace;letter-spacing:-0.5px;line-height:1">TTC</div>
       <div style="text-align:right;font-family:'Sarabun',sans-serif;font-size:10px;color:var(--muted);line-height:1.5">
         พัฒนาโดย<br>
-        <span style="color:var(--accent);font-weight:600">รศ.ดร.อิทธิพล มีผล</span><br>
+        <span style="color:var(--accent);font-weight:600">รศ.ดร.อิทธิพล มีพล</span><br>
         <span style="font-size:9px">TTC · KMUTNB</span>
       </div>
     </div>
@@ -1312,21 +1312,23 @@ function generatePDF() {
   const W18_cap = layers.length > 0 ? calcW18fromSN(SN_prov, ZR, So, MR, pi, pt) / 1e6 : 0;
 
   // ── DOS Style Report ─────────────────────────────────
-  const ML = 15;      // margin left
-  const PAGE_R = 195; // margin right
-  const LW = 180;     // line width
+  const ML = 15;
+  const PAGE_R = 195;
+  const EQ  = '================================================'; // 48 chars
+  const DAS = '------------------------------------------------'; // 48 chars
   let y = 15;
 
-  // helper: draw horizontal line
-  function hline(yy, lw) {
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(lw || 0.3);
-    doc.line(ML, yy, ML + LW, yy);
+  // helper: print a full-width separator line (=== or ---)
+  function sep(yy, char) {
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.text(char === '=' ? EQ : DAS, ML, yy);
   }
 
-  // helper: row with label (left) and value (right), Courier font
-  function row(label, value, yy, bold) {
-    doc.setFont('courier', bold ? 'bold' : 'normal');
+  // helper: label + value row
+  function row(label, value, yy) {
+    doc.setFont('courier', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
     doc.text(label, ML, yy);
@@ -1335,50 +1337,43 @@ function generatePDF() {
 
   // ── HEADER ────────────────────────────────────────────
   doc.setFont('courier', 'bold');
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
   doc.text('FLEXIBLE PAVEMENT DESIGN - AASHTO 1993', 105, y, { align: 'center' });
-  y += 6;
-  doc.setFontSize(9);
+  y += 5;
+  doc.setFontSize(8);
   doc.setFont('courier', 'normal');
-  doc.text('Assoc.Prof.Dr.Ittipon Meepol  |  TTC-KMUTNB', 105, y, { align: 'center' });
+  doc.text('Assoc.Prof.Dr.Ittipon Meepon  |  TTC-KMUTNB', 105, y, { align: 'center' });
   y += 5;
-  hline(y, 0.5);
-  y += 5;
+  sep(y, '='); y += 5;
 
   // ── PROJECT & DATE ────────────────────────────────────
-  doc.setFont('courier', 'normal');
-  doc.setFontSize(9);
-  doc.text(`Project : ${projectName}`, ML, y);
-  doc.text(`Date    : ${now}`, PAGE_R, y, { align: 'right' });
+  row(`Project : ${projectName}`, `Date : ${now}`, y);
   y += 5;
-  hline(y, 0.5);
-  y += 6;
+  sep(y, '='); y += 6;
 
   // ── DESIGN INPUT ──────────────────────────────────────
   doc.setFont('courier', 'bold');
   doc.setFontSize(9);
   doc.text('DESIGN INPUT', ML, y);
   y += 4;
-  hline(y, 0.3);
-  y += 5;
+  sep(y, '-'); y += 5;
 
   const inputs = [
     ['W18 (Design ESAL)', `${W18.toFixed(2)} M ESAL`],
-    ['CBR (Subgrade)', `${CBR.toFixed(2)} %`],
-    ['MR  (Subgrade)', `${getMR().toLocaleString('en', {maximumFractionDigits:0})} psi`],
-    ['R / ZR / So', `${R}% / ${ZR.toFixed(3)} / ${So.toFixed(2)}`],
-    ['pi / pt / DPSI', `${pi.toFixed(1)} / ${pt.toFixed(1)} / ${DPSI.toFixed(2)}`],
-    ['SN Required', `${SN_req.toFixed(3)}`],
+    ['CBR (Subgrade)',    `${CBR.toFixed(2)} %`],
+    ['MR  (Subgrade)',   `${getMR().toLocaleString('en', {maximumFractionDigits:0})} psi`],
+    ['R / ZR / So',      `${R}% / ${ZR.toFixed(3)} / ${So.toFixed(2)}`],
+    ['pi / pt / DPSI',   `${pi.toFixed(1)} / ${pt.toFixed(1)} / ${DPSI.toFixed(2)}`],
+    ['SN Required',      `${SN_req.toFixed(3)}`],
   ];
 
   inputs.forEach(([label, value]) => {
-    row(label, value, y, false);
+    row(label, value, y);
     y += 6;
   });
 
-  hline(y, 0.3);
-  y += 6;
+  sep(y, '='); y += 6;
 
   // ── LAYER DESIGN ──────────────────────────────────────
   if (layers.length > 0) {
@@ -1387,45 +1382,41 @@ function generatePDF() {
     doc.setTextColor(0, 0, 0);
     doc.text('LAYER DESIGN', ML, y);
     y += 4;
-    hline(y, 0.3);
-    y += 5;
+    sep(y, '-'); y += 5;
 
-    // Column positions
+    // Column positions (mm from left)
     const C = {
-      no:     ML,
-      mat:    ML + 8,
-      ai:     ML + 90,
-      mi:     ML + 105,
-      diIn:   ML + 120,
-      diCm:   ML + 135,
-      dsni:   ML + 152,
-      accSN:  ML + 170,
+      no:    ML,
+      mat:   ML + 8,
+      ai:    ML + 92,
+      mi:    ML + 107,
+      diIn:  ML + 122,
+      diCm:  ML + 137,
+      dsni:  ML + 155,
+      accSN: ML + 173,
     };
 
-    // Header
+    // Column header
     doc.setFont('courier', 'bold');
     doc.setFontSize(8);
     doc.text('No', C.no, y);
     doc.text('Material', C.mat, y);
-    doc.text('ai', C.ai, y, { align: 'right' });
-    doc.text('mi', C.mi, y, { align: 'right' });
-    doc.text('Di(in)', C.diIn, y, { align: 'right' });
-    doc.text('Di(cm)', C.diCm, y, { align: 'right' });
-    doc.text('DSNi', C.dsni, y, { align: 'right' });
+    doc.text('ai',      C.ai,    y, { align: 'right' });
+    doc.text('mi',      C.mi,    y, { align: 'right' });
+    doc.text('Di(in)',  C.diIn,  y, { align: 'right' });
+    doc.text('Di(cm)',  C.diCm,  y, { align: 'right' });
+    doc.text('DSNi',   C.dsni,  y, { align: 'right' });
     doc.text('ACC.SN', C.accSN, y, { align: 'right' });
     y += 3;
-    hline(y, 0.3);
-    y += 5;
+    sep(y, '-'); y += 5;
 
     // Layer rows
-    let accSN = 0;
-    let totalDcm = 0;
-    let totalDin = 0;
+    let accSN = 0, totalDcm = 0, totalDin = 0;
 
     layers.forEach((layer, i) => {
       const D_in = layer.D / 2.54;
       const dsni = layer.a * (layer.m || 1) * D_in;
-      accSN += dsni;
+      accSN    += dsni;
       totalDcm += layer.D;
       totalDin += D_in;
 
@@ -1433,59 +1424,56 @@ function generatePDF() {
       doc.setFontSize(8);
       doc.setTextColor(0, 0, 0);
       doc.text(`${i + 1}`, C.no, y);
-      // truncate material name to fit
-      const matName = (layer.pdfName || layer.name).substring(0, 32);
-      doc.text(matName, C.mat, y);
-      doc.text(layer.a.toFixed(2), C.ai, y, { align: 'right' });
-      doc.text((layer.m || 1).toFixed(2), C.mi, y, { align: 'right' });
-      doc.text(D_in.toFixed(2), C.diIn, y, { align: 'right' });
-      doc.text(layer.D.toFixed(1), C.diCm, y, { align: 'right' });
-      doc.text(dsni.toFixed(3), C.dsni, y, { align: 'right' });
-      doc.text(accSN.toFixed(3), C.accSN, y, { align: 'right' });
+      const matName = (layer.pdfName || layer.name).substring(0, 33);
+      doc.text(matName,                C.mat,   y);
+      doc.text(layer.a.toFixed(2),     C.ai,    y, { align: 'right' });
+      doc.text((layer.m||1).toFixed(2),C.mi,    y, { align: 'right' });
+      doc.text(D_in.toFixed(2),        C.diIn,  y, { align: 'right' });
+      doc.text(layer.D.toFixed(1),     C.diCm,  y, { align: 'right' });
+      doc.text(dsni.toFixed(3),        C.dsni,  y, { align: 'right' });
+      doc.text(accSN.toFixed(3),       C.accSN, y, { align: 'right' });
       y += 6;
     });
 
-    hline(y, 0.3);
-    y += 5;
+    sep(y, '-'); y += 5;
 
     // Total row
     doc.setFont('courier', 'bold');
     doc.setFontSize(8);
     doc.text('TOTAL', C.no, y);
-    doc.text(totalDin.toFixed(2), C.diIn, y, { align: 'right' });
-    doc.text(totalDcm.toFixed(1), C.diCm, y, { align: 'right' });
-    doc.text(accSN.toFixed(3), C.accSN, y, { align: 'right' });
+    doc.text(totalDin.toFixed(2), C.diIn,  y, { align: 'right' });
+    doc.text(totalDcm.toFixed(1), C.diCm,  y, { align: 'right' });
+    doc.text(accSN.toFixed(3),    C.accSN, y, { align: 'right' });
     y += 4;
-    hline(y, 0.5);
-    y += 7;
+    sep(y, '='); y += 7;
 
     // ── SUMMARY ───────────────────────────────────────────
     doc.setFont('courier', 'bold');
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
-    doc.text(`SN Required  =  ${SN_req.toFixed(3)}`, ML, y);
+    doc.text(`SN Required  =  ${SN_req.toFixed(3)}`, ML,  y);
     doc.text(`SN Provided  =  ${SN_prov.toFixed(3)}`, 105, y);
     y += 6;
-    doc.text(`SN Margin    =  ${margin >= 0 ? '+' : ''}${margin.toFixed(3)}`, ML, y);
+    doc.text(`SN Margin    =  ${margin >= 0 ? '+' : ''}${margin.toFixed(3)}`, ML,  y);
     doc.text(`W18 Capacity =  ${W18_cap.toFixed(2)} M ESAL`, 105, y);
     y += 5;
-    hline(y, 0.5);
-    y += 6;
+    sep(y, '='); y += 6;
 
     // STATUS
+    doc.setFont('courier', 'bold');
     doc.setFontSize(11);
     const statusText = `STATUS : ${pass && allDminOk ? 'PASS' : 'FAIL'}`;
     doc.setTextColor(pass && allDminOk ? 0 : 180, 0, 0);
     doc.text(statusText, 105, y, { align: 'center' });
     y += 4;
-    hline(y, 0.5);
+    sep(y, '=');
   }
 
   // ── FOOTER ────────────────────────────────────────────
   doc.setFont('courier', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(100, 100, 100);
-  doc.text('AASHTO Guide for Design of Pavement Structures (1993)  |  TTC-KMUTNB  |  Flexible Pavement Design', 105, 290, { align: 'center' });
+  doc.text('AASHTO Guide for Design of Pavement Structures (1993)  |  TTC-KMUTNB', 105, 290, { align: 'center' });
 
   // Save
   const filename = projectName.replace(/[^a-zA-Z0-9]/g, '_') || 'Flexible_Pavement';
