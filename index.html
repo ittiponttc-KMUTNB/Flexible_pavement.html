@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Flexible Pavement Design — AASHTO 1993</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222636;
+    --border: #2e3348;
+    --accent: #f0c040;
+    --accent2: #4fc3f7;
+    --green: #66bb6a;
+    --red: #ef5350;
+    --orange: #ffa726;
+    --text: #e8eaf0;
+    --muted: #6b7194;
+    --label: #9ba3c8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 16px;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    padding: 14px 16px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+  .header-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 1;
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-weight: 600;
+  }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* Sections */
+  .section { display: none; padding: 14px 14px 0; }
+  .section.active { display: block; }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  /* Input groups */
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .input-row.single { grid-template-columns: 1fr; }
+  .input-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+  }
+  .field label {
+    font-size: 11px;
+    color: var(--label);
+    margin-bottom: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+  }
+  .field label .unit {
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .field input, .field select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 16px;
+    padding: 8px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    width: 100%;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .field select option { background: var(--surface2); }
+
+  /* Hint text */
+  .hint {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* CBR → MR display */
+  .cbr-result {
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--accent2);
+    margin-top: 4px;
+  }
+
+  /* Layer editor */
+  .layer-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    padding: 7px 14px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .btn:active { opacity: 0.7; }
+  .btn.accent { background: var(--accent); color: #000; border-color: var(--accent); }
+  .btn.danger { border-color: var(--red); color: var(--red); }
+
+  .layer-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  .layer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .layer-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--border);
+    color: var(--accent);
+  }
+  .layer-delete {
+    background: none;
+    border: none;
+    color: var(--red);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  /* Results */
+  .result-box {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 10px;
+    border-left: 3px solid var(--muted);
+  }
+  .result-box.pass { border-left-color: var(--green); }
+  .result-box.fail { border-left-color: var(--red); }
+  .result-box.warn { border-left-color: var(--orange); }
+
+  .result-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .result-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .result-value.big { font-size: 32px; }
+  .result-value .unit { font-size: 14px; color: var(--muted); }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+  .status-badge.pass { background: rgba(102,187,106,0.15); color: var(--green); border: 1px solid var(--green); }
+  .status-badge.fail { background: rgba(239,83,80,0.15); color: var(--red); border: 1px solid var(--red); }
+
+  /* SN Summary grid */
+  .sn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  /* Intermediate table */
+  .info-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  .info-table tr { border-bottom: 1px solid var(--border); }
+  .info-table tr:last-child { border-bottom: none; }
+  .info-table td {
+    padding: 7px 4px;
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .info-table td:first-child { color: var(--label); }
+  .info-table td:last-child { text-align: right; color: var(--text); font-weight: 600; }
+
+  /* Layer SN breakdown */
+  .sn-bar-wrap { margin-top: 10px; }
+  .sn-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--label);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 3px;
+  }
+  .sn-bar-bg {
+    background: var(--border);
+    border-radius: 4px;
+    height: 8px;
+    margin-bottom: 6px;
+    overflow: hidden;
+  }
+  .sn-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+
+  /* D input — highlight as primary field */
+  .d-field label {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .d-field input {
+    font-size: 26px !important;
+    font-weight: 700;
+    color: var(--accent) !important;
+    border: 2px solid var(--accent) !important;
+    border-radius: 8px;
+    padding: 10px 14px !important;
+    background: rgba(240,192,64,0.06) !important;
+    text-align: center;
+  }
+  .d-field input:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(240,192,64,0.15);
+    outline: none;
+  }
+
+  /* D_min inline badge */
+  .dmin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    width: 100%;
+    justify-content: center;
+  }
+  .dmin-badge.pass {
+    background: rgba(102,187,106,0.12);
+    color: var(--green);
+    border: 1px solid rgba(102,187,106,0.35);
+  }
+  .dmin-badge.fail {
+    background: rgba(239,83,80,0.12);
+    color: var(--red);
+    border: 1px solid rgba(239,83,80,0.35);
+  }
+  .dmin-badge.na {
+    background: rgba(107,113,148,0.12);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .empty .icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* Formula display */
+  .formula-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-top: 8px;
+  }
+  .formula-block .hl { color: var(--accent2); }
+
+  /* Reliability table */
+  .ref-table { width: 100%; border-collapse: collapse; }
+  .ref-table th {
+    background: var(--border);
+    padding: 6px 8px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+    text-align: left;
+  }
+  .ref-table td {
+    padding: 6px 8px;
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .ref-table tr:last-child td { border-bottom: none; }
+  .ref-table tr.highlight td { color: var(--accent); background: rgba(240,192,64,0.06); }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  /* Footer note */
+  .footnote {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    text-align: center;
+    margin-top: 16px;
+    padding: 0 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div class="header-title">▪ FLEXIBLE PAVEMENT DESIGN</div>
+      <div class="header-sub">AASHTO 1993 · W18 Input · Mobile Edition</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px;flex-shrink:0;margin-left:8px">
+      <img src="data:image/png;base64,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" 
+           style="width:34px;height:34px;object-fit:contain;mix-blend-mode:screen"
+           alt="TTC KMUTNB">
+      <div style="text-align:right;font-family:'Sarabun',sans-serif;font-size:10px;color:var(--muted);line-height:1.5">
+        พัฒนาโดย<br>
+        <span style="color:var(--accent);font-weight:600">รศ.ดร.อิทธิพล มีผล</span><br>
+        <span style="font-size:9px">TTC · KMUTNB</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('input')">① Design Input</div>
+  <div class="tab" onclick="showTab('layers')">② Layers</div>
+  <div class="tab" onclick="showTab('result')">③ Results</div>
+  <div class="tab" onclick="showTab('ref')">④ Reference</div>
+</div>
+
+<!-- TAB 1: INPUT -->
+<div class="section active" id="tab-input">
+
+  <div class="card">
+    <div class="card-title">Traffic Loading</div>
+    <div class="input-row single">
+      <div class="field">
+        <label>W18 <span class="unit">(ล้าน ESAL)</span></label>
+        <input type="number" id="W18" value="2.5" step="0.1" min="0.01" oninput="calc()">
+        <div class="hint">Design period accumulated 18-kip ESAL</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Subgrade — CBR → M<sub>R</sub></div>
+    <div class="input-row">
+      <div class="field">
+        <label>CBR <span class="unit">(%)</span></label>
+        <input type="number" id="CBR" value="5" step="0.5" min="1" max="100" oninput="updateMR()">
+      </div>
+      <div class="field">
+        <label>M<sub>R</sub> Method</label>
+        <select id="mrMethod" onchange="updateMR()">
+          <option value="aashto">AASHTO: 1500×CBR</option>
+          <option value="powell">Powell: 2555×CBR^0.64</option>
+          <option value="manual">กรอกเอง</option>
+        </select>
+      </div>
+    </div>
+    <div id="mrManualRow" class="input-row single" style="display:none">
+      <div class="field">
+        <label>M<sub>R</sub> (กรอกตรง) <span class="unit">(psi)</span></label>
+        <input type="number" id="MR_manual" value="7500" step="100" oninput="calc()">
+      </div>
+    </div>
+    <div class="cbr-result" id="mrDisplay">M<sub>R</sub> = 7,500 psi</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Reliability & Variance</div>
+    <div class="input-row">
+      <div class="field">
+        <label>Reliability R <span class="unit">(%)</span></label>
+        <select id="R" onchange="updateZR()">
+          <option value="50">50% (ZR=-0.000)</option>
+          <option value="75">75% (ZR=-0.674)</option>
+          <option value="80">80% (ZR=-0.841)</option>
+          <option value="85">85% (ZR=-1.037)</option>
+          <option value="90" selected>90% (ZR=-1.282)</option>
+          <option value="95">95% (ZR=-1.645)</option>
+          <option value="99">99% (ZR=-2.327)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>ZR</label>
+        <input type="number" id="ZR" value="-1.282" step="0.001" oninput="calc()">
+        <div class="hint">auto-fill จาก R</div>
+      </div>
+    </div>
+    <div class="input-row single">
+      <div class="field">
+        <label>So — Combined Std. Deviation</label>
+        <input type="number" id="So" value="0.45" step="0.01" min="0.3" max="0.6" oninput="calc()">
+        <div class="hint">ทั่วไป 0.40–0.50 (Flexible)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Serviceability Loss</div>
+    <div class="input-row">
+      <div class="field">
+        <label>p<sub>i</sub> — Initial PSI</label>
+        <input type="number" id="pi" value="4.2" step="0.1" min="3" max="5" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>p<sub>t</sub> — Terminal PSI</label>
+        <input type="number" id="pt" value="2.5" step="0.1" min="1.5" max="3" oninput="calc()">
+      </div>
+    </div>
+    <div class="cbr-result" id="dpsiDisplay">ΔPSI = 1.70</div>
+  </div>
+
+  <div style="text-align:center; padding: 6px 0 14px;">
+    <button class="btn accent" onclick="showTab('layers')">ถัดไป: กำหนด Layers →</button>
+  </div>
+</div>
+
+<!-- TAB 2: LAYERS -->
+<div class="section" id="tab-layers">
+
+  <div class="card">
+    <div class="card-title">Layer Configuration</div>
+    <div class="layer-controls">
+      <button class="btn accent" onclick="addLayer()">+ เพิ่มชั้น</button>
+      <button class="btn" onclick="loadPreset('standard')">โครงสร้างมาตรฐาน</button>
+    </div>
+
+    <div id="layerList">
+      <!-- layers injected here -->
+    </div>
+
+    <div id="layerEmpty" class="empty">
+      <div class="icon">📋</div>
+      กดปุ่ม "เพิ่มชั้น" หรือ "โครงสร้างมาตรฐาน"
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">ฐานข้อมูลวัสดุ (มาตรฐาน ทล.)</div>
+    <table class="ref-table">
+      <tr><th>วัสดุ</th><th>a</th><th>MR (MPa)</th></tr>
+      <tr><td>ผิวทางลาดยาง AC</td><td>0.40</td><td>2,500</td></tr>
+      <tr><td>ผิวทางลาดยาง PMA</td><td>0.40</td><td>3,700</td></tr>
+      <tr><td>พื้นทางหินคลุก CTB</td><td>0.18</td><td>1,200</td></tr>
+      <tr><td>พื้นทางหินคลุกผสมซีเมนต์ UCS 24.5 ksc.</td><td>0.15</td><td>850</td></tr>
+      <tr><td>พื้นทางหินคลุก CBR 80%</td><td>0.13</td><td>350</td></tr>
+      <tr><td>พื้นทางดินซีเมนต์ UCS 17.5 ksc.</td><td>0.13</td><td>350</td></tr>
+      <tr><td>พื้นทางวัสดุมุมเวียน (Recycling)</td><td>0.15</td><td>850</td></tr>
+      <tr><td>รองพื้นทางวัสดุมวลรวม CBR 25%</td><td>0.10</td><td>150</td></tr>
+      <tr><td>วัสดุคัดเลือก ก</td><td>0.08</td><td>100</td></tr>
+    </table>
+    <div class="hint" style="margin-top:8px">m = 1.0 (DOH default) · แก้ไขได้ในแต่ละชั้น</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Drainage Coefficient (m)</div>
+    <table class="ref-table">
+      <tr><th>Drainage Quality</th><th>m (% เวลาอิ่มตัว)</th><th>ค่า m</th></tr>
+      <tr><td>Excellent</td><td>&lt;1%</td><td>1.40–1.35</td></tr>
+      <tr><td>Good</td><td>1–5%</td><td>1.35–1.25</td></tr>
+      <tr><td>Fair</td><td>5–25%</td><td>1.25–1.15</td></tr>
+      <tr><td>Poor</td><td>25–50%</td><td>1.15–1.05</td></tr>
+      <tr><td>Very Poor</td><td>&gt;50%</td><td>1.05–0.95</td></tr>
+    </table>
+  </div>
+
+  <div style="text-align:center; padding: 6px 0 14px;">
+    <button class="btn accent" onclick="showTab('result')">ดูผลลัพธ์ →</button>
+  </div>
+</div>
+
+<!-- TAB 3: RESULTS -->
+<div class="section" id="tab-result">
+
+  <div id="resultContent">
+    <div class="empty">
+      <div class="icon">🔢</div>
+      กรอก Input และกำหนด Layers ก่อนครับ
+    </div>
+  </div>
+
+</div>
+
+<!-- TAB 4: REFERENCE -->
+<div class="section" id="tab-ref">
+
+  <div class="card">
+    <div class="card-title">AASHTO 1993 Design Equation</div>
+    <div class="formula-block">
+log W18 = <span class="hl">ZR·So</span> + 9.36·log(SN+1) − 0.20<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ log[ΔPSI/(4.2−1.5)] / (0.40 + 1094/(SN+1)^5.19)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 2.32·log(<span class="hl">MR</span>) − 8.07<br><br>
+<span class="hl">SN = a₁D₁ + a₂m₂D₂ + a₃m₃D₃ + ...</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">CBR → M<sub>R</sub> Conversion</div>
+    <div class="formula-block">
+AASHTO: <span class="hl">MR = 1,500 × CBR</span> (psi)<br>
+Powell:  <span class="hl">MR = 2,555 × CBR^0.64</span> (psi)<br><br>
+ใช้ AASHTO เป็น default สำหรับงาน DOH ไทย
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Reliability — ZR Values</div>
+    <table class="ref-table">
+      <tr><th>R (%)</th><th>ZR</th><th>การใช้งาน</th></tr>
+      <tr><td>50</td><td>0.000</td><td>ทดสอบ/ประเมิน</td></tr>
+      <tr><td>75</td><td>-0.674</td><td>ถนนชนบท</td></tr>
+      <tr><td>85</td><td>-1.037</td><td>ถนนท้องถิ่น</td></tr>
+      <tr class="highlight"><td>90</td><td>-1.282</td><td>ทางหลวงทั่วไป ✓</td></tr>
+      <tr><td>95</td><td>-1.645</td><td>ทางหลวงสำคัญ</td></tr>
+      <tr><td>99</td><td>-2.327</td><td>ทางด่วน/ถนนสำคัญมาก</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Serviceability Index</div>
+    <table class="ref-table">
+      <tr><th>PSI</th><th>ความหมาย</th></tr>
+      <tr><td>5.0</td><td>สมบูรณ์แบบ (ทางทฤษฎี)</td></tr>
+      <tr class="highlight"><td>4.2</td><td>ค่า p<sub>i</sub> มาตรฐาน Flexible ✓</td></tr>
+      <tr><td>3.0</td><td>เริ่มเสื่อม</td></tr>
+      <tr class="highlight"><td>2.5</td><td>p<sub>t</sub> ทางหลวงทั่วไป ✓</td></tr>
+      <tr><td>2.0</td><td>p<sub>t</sub> ถนนชนบท/ท้องถิ่น</td></tr>
+    </table>
+  </div>
+
+  <div class="footnote">
+    AASHTO Guide for Design of Pavement Structures (1993)<br>
+    Developed for field use · Offline capable
+  </div>
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────
+let layers = [];
+let layerCounter = 0;
+
+const ZR_MAP = {
+  50: 0.000, 75: -0.674, 80: -0.841,
+  85: -1.037, 90: -1.282, 95: -1.645, 99: -2.327
+};
+
+// DOH Material Library (มาตรฐาน ทล.)
+const LAYER_TYPES = [
+  { name: 'ผิวทางลาดยาง AC',                                    a: 0.40, m: 1.0, hasDrainage: false, mr: 362500 },
+  { name: 'ผิวทางลาดยาง PMA',                                   a: 0.40, m: 1.0, hasDrainage: false, mr: 536500 },
+  { name: 'พื้นทางหินคลุกปรับปรุงคุณภาพด้วยปูนซีเมนต์ (CTB)',  a: 0.18, m: 1.0, hasDrainage: true,  mr: 174000 },
+  { name: 'พื้นทางหินคลุกผสมซีเมนต์ UCS 24.5 ksc.',            a: 0.15, m: 1.0, hasDrainage: true,  mr: 123250 },
+  { name: 'พื้นทางหินคลุก CBR 80%',                             a: 0.13, m: 1.0, hasDrainage: true,  mr:  50750 },
+  { name: 'พื้นทางดินซีเมนต์ UCS 17.5 ksc.',                   a: 0.13, m: 1.0, hasDrainage: true,  mr:  50750 },
+  { name: 'พื้นทางวัสดุมุมเวียน (Recycling)',                   a: 0.15, m: 1.0, hasDrainage: true,  mr: 123250 },
+  { name: 'รองพื้นทางวัสดุมวลรวม CBR 25%',                     a: 0.10, m: 1.0, hasDrainage: true,  mr:  21750 },
+  { name: 'วัสดุคัดเลือก ก',                                    a: 0.08, m: 1.0, hasDrainage: true,  mr:  14504 },
+  { name: 'Custom',                                              a: 0.40, m: 1.0, hasDrainage: true,  mr:      0 },
+];
+
+// ─── Tab control ─────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => {
+    if (t.getAttribute('onclick').includes(name)) t.classList.add('active');
+  });
+  if (name === 'result') renderResult();
+}
+
+// ─── MR calculation ──────────────────────────────────────
+function getMR() {
+  const cbr = parseFloat(document.getElementById('CBR').value) || 5;
+  const method = document.getElementById('mrMethod').value;
+  if (method === 'aashto') return 1500 * cbr;
+  if (method === 'powell') return 2555 * Math.pow(cbr, 0.64);
+  return parseFloat(document.getElementById('MR_manual').value) || 7500;
+}
+
+function updateMR() {
+  const method = document.getElementById('mrMethod').value;
+  document.getElementById('mrManualRow').style.display = method === 'manual' ? 'block' : 'none';
+  const mr = getMR();
+  document.getElementById('mrDisplay').innerHTML = `M<sub>R</sub> = ${mr.toLocaleString('en', {maximumFractionDigits: 0})} psi`;
+  calc();
+}
+
+function updateZR() {
+  const r = parseInt(document.getElementById('R').value);
+  document.getElementById('ZR').value = ZR_MAP[r].toFixed(3);
+  calc();
+}
+
+function updateDPSI() {
+  const pi = parseFloat(document.getElementById('pi').value) || 4.2;
+  const pt = parseFloat(document.getElementById('pt').value) || 2.5;
+  const dpsi = pi - pt;
+  document.getElementById('dpsiDisplay').textContent = `ΔPSI = ${dpsi.toFixed(2)}`;
+}
+
+// ─── SN Required (AASHTO iterative solve) ────────────────
+function calcSNRequired(W18_million, ZR, So, MR, pi, pt) {
+  const W18 = W18_million * 1e6;
+  const logW18 = Math.log10(W18);
+  const DPSI = pi - pt;
+
+  // Solve for SN iteratively
+  function f(SN) {
+    const term1 = ZR * So;
+    const term2 = 9.36 * Math.log10(SN + 1) - 0.20;
+    const term3 = Math.log10(DPSI / (4.2 - 1.5)) / (0.40 + 1094 / Math.pow(SN + 1, 5.19));
+    const term4 = 2.32 * Math.log10(MR) - 8.07;
+    return term1 + term2 + term3 + term4 - logW18;
+  }
+
+  // Bisection
+  let lo = 0.5, hi = 20, mid;
+  for (let i = 0; i < 100; i++) {
+    mid = (lo + hi) / 2;
+    if (f(mid) < 0) lo = mid; else hi = mid;
+    if (hi - lo < 0.0001) break;
+  }
+  return mid;
+}
+
+// ─── W18 from SN (for verification display) ──────────────
+function calcW18fromSN(SN, ZR, So, MR, pi, pt) {
+  const DPSI = pi - pt;
+  const term1 = ZR * So;
+  const term2 = 9.36 * Math.log10(SN + 1) - 0.20;
+  const term3 = Math.log10(DPSI / (4.2 - 1.5)) / (0.40 + 1094 / Math.pow(SN + 1, 5.19));
+  const term4 = 2.32 * Math.log10(MR) - 8.07;
+  return Math.pow(10, term1 + term2 + term3 + term4);
+}
+
+// ─── Main calc (called on every input change) ─────────────
+function calc() {
+  updateDPSI();
+  updateAllBadges();
+  const resultTab = document.getElementById('tab-result');
+  if (resultTab.classList.contains('active')) renderResult();
+}
+
+// ─── Layer management ────────────────────────────────────
+function addLayer(preset) {
+  const id = ++layerCounter;
+  const defaults = preset || LAYER_TYPES[0];
+  layers.push({
+    id, name: defaults.name, a: defaults.a,
+    m: defaults.m || 1.0, D: 10,
+    hasDrainage: defaults.hasDrainage,
+    mr: defaults.mr || 0
+  });
+  renderLayers();
+  calc();
+}
+
+function removeLayer(id) {
+  layers = layers.filter(l => l.id !== id);
+  renderLayers();
+  calc();
+}
+
+function loadPreset(type) {
+  layers = [];
+  layerCounter = 0;
+  if (type === 'standard') {
+    const presets = [
+      { name: 'ผิวทางลาดยาง AC',               a: 0.40, m: 1.0, D: 5,  hasDrainage: false, mr: 362500 },
+      { name: 'พื้นทางหินคลุก CBR 80%',         a: 0.13, m: 1.0, D: 15, hasDrainage: true,  mr:  50750 },
+      { name: 'รองพื้นทางวัสดุมวลรวม CBR 25%',  a: 0.10, m: 1.0, D: 20, hasDrainage: true,  mr:  21750 },
+    ];
+    presets.forEach(p => { layers.push({ id: ++layerCounter, ...p }); });
+  }
+  renderLayers();
+  calc();
+}
+
+function updateLayerField(id, field, value) {
+  const layer = layers.find(l => l.id === id);
+  if (!layer) return;
+  if (field === 'name') {
+    const match = LAYER_TYPES.find(t => t.name === value);
+    if (match) {
+      layer.name = match.name;
+      layer.a = match.a;
+      layer.hasDrainage = match.hasDrainage;
+      layer.mr = match.mr || 0;
+      if (!match.hasDrainage) layer.m = 1.0;
+    } else {
+      layer.name = value;
+    }
+  } else {
+    layer[field] = parseFloat(value) || 0;
+  }
+  renderLayers();
+  calc();
+}
+
+const COLORS = ['#f0c040','#4fc3f7','#66bb6a','#ffa726','#ce93d8','#ef9a9a','#80cbc4'];
+
+// ─── คำนวณและอัปเดต badge ทุกชั้น (ไม่ re-render ทั้ง layer) ────
+function updateAllBadges() {
+  const W18 = parseFloat(document.getElementById('W18').value) || 0;
+  const ZR  = parseFloat(document.getElementById('ZR').value)  || -1.282;
+  const So  = parseFloat(document.getElementById('So').value)  || 0.45;
+  const pi  = parseFloat(document.getElementById('pi').value)  || 4.2;
+  const pt  = parseFloat(document.getElementById('pt').value)  || 2.5;
+  const MR  = getMR();
+  const dminResults = (W18 > 0 && MR > 0 && layers.length > 0)
+    ? calcLayerDmin(layers, W18, ZR, So, pi, pt, MR)
+    : [];
+
+  layers.forEach((layer, idx) => {
+    const el = document.getElementById('badge-' + layer.id);
+    if (!el) return;
+    const dr = dminResults[idx];
+    if (!dr) {
+      el.className = 'dmin-badge na';
+      el.textContent = 'กรอก Input ก่อน';
+      return;
+    }
+    if (dr.D_min_cm < 0.1) {
+      el.className = 'dmin-badge na';
+      el.textContent = '— D_min ≈ 0 (SN สะสมเพียงพอ)';
+    } else if (dr.ok) {
+      el.className = 'dmin-badge pass';
+      el.textContent = `✓ ผ่าน  (ต้องการ ≥ ${dr.D_min_cm.toFixed(1)} cm)`;
+    } else {
+      el.className = 'dmin-badge fail';
+      el.textContent = `✗ ต้องการ ≥ ${dr.D_min_cm.toFixed(1)} cm  (ขาด ${(dr.D_min_cm - layer.D).toFixed(1)} cm)`;
+    }
+  });
+}
+
+function renderLayers() {
+  const list  = document.getElementById('layerList');
+  const empty = document.getElementById('layerEmpty');
+  if (layers.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = layers.map((layer, idx) => {
+    const color = COLORS[idx % COLORS.length];
+    return `
+    <div class="layer-item" id="layer-${layer.id}">
+      <div class="layer-header">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:10px;height:10px;border-radius:2px;background:${color};flex-shrink:0"></div>
+          <span class="layer-badge">Layer ${idx + 1}</span>
+        </div>
+        <button class="layer-delete" onclick="removeLayer(${layer.id})">×</button>
+      </div>
+
+      <!-- วัสดุ -->
+      <div class="input-row single" style="margin-bottom:10px">
+        <div class="field">
+          <label>วัสดุ</label>
+          <select onchange="updateLayerField(${layer.id},'name',this.value)">
+            ${LAYER_TYPES.map(t => `<option value="${t.name}" ${t.name === layer.name ? 'selected' : ''}>${t.name}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+
+      <!-- D — full width prominent -->
+      <div class="field d-field" style="margin-bottom:6px">
+        <label>ความหนา D<sub>${idx+1}</sub> <span style="font-size:11px;color:var(--muted);font-weight:400">(cm)</span></label>
+        <input type="number" value="${layer.D}" step="1" min="1"
+          oninput="layers.find(l=>l.id===${layer.id}).D=parseFloat(this.value)||0;calc()">
+        <div id="badge-${layer.id}" class="dmin-badge na">กรอก Input ก่อน</div>
+      </div>
+
+      <!-- a และ m — แถวล่าง เล็กกว่า -->
+      <div class="input-row" style="margin-top:8px">
+        <div class="field">
+          <label>a<sub>${idx+1}</sub> <span class="unit">Layer Coeff.</span></label>
+          <input type="number" value="${layer.a}" step="0.01" min="0.05" max="0.60"
+            oninput="layers.find(l=>l.id===${layer.id}).a=parseFloat(this.value)||0;calc()">
+        </div>
+        <div class="field">
+          <label>m<sub>${idx+1}</sub> <span class="unit">Drainage</span></label>
+          <input type="number" value="${layer.m}" step="0.05" min="0.7" max="1.4"
+            ${!layer.hasDrainage ? 'disabled style="opacity:0.4"' : ''}
+            oninput="layers.find(l=>l.id===${layer.id}).m=parseFloat(this.value)||1;calc()">
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // อัปเดต badge หลัง render
+  updateAllBadges();
+}
+
+// ─── Full AASHTO Layer-by-Layer D_min ────────────────────
+// SN_i* = SN required ที่ top of layer i+1 (ใช้ MR ของชั้นถัดไป)
+// ชั้นสุดท้าย: ใช้ MR subgrade
+// D_i_min = max((SN_i* - SN_prev_accumulated) / (a_i × m_i), 0)  [inches → cm]
+function calcLayerDmin(layers, W18, ZR, So, pi, pt, MR_subgrade) {
+  const n = layers.length;
+  if (n === 0) return [];
+
+  // SN* ต่อชั้น: ชั้น i ใช้ MR ของชั้นถัดไป (i+1)
+  // ชั้นสุดท้ายใช้ MR_subgrade
+  const SN_star = layers.map((layer, i) => {
+    let mr;
+    if (i === n - 1) {
+      mr = MR_subgrade;                      // ชั้นสุดท้าย → MR subgrade
+    } else {
+      mr = layers[i + 1].mr || MR_subgrade;  // ใช้ MR ของชั้นถัดไปจาก library
+    }
+    if (!mr || mr <= 0) mr = MR_subgrade;
+    return calcSNRequired(W18, ZR, So, mr, pi, pt);
+  });
+
+  // D_min layer-by-layer
+  const results = [];
+  let SN_accum = 0; // SN ที่สะสมจากชั้นก่อนหน้า (D จริงที่กรอก)
+
+  layers.forEach((layer, i) => {
+    const a  = layer.a  || 0;
+    const m  = layer.m  || 1.0;
+    const SN_needed = SN_star[i];
+    const SN_deficit = SN_needed - SN_accum;
+    const D_min_in = (a * m > 0) ? Math.max(SN_deficit / (a * m), 0) : 0;
+    const D_min_cm = D_min_in * 2.54;
+
+    // MR ที่ใช้คำนวณ SN* ของชั้นนี้
+    let mr_used;
+    if (i === n - 1) {
+      mr_used = MR_subgrade;
+    } else {
+      mr_used = layers[i + 1].mr || MR_subgrade;
+    }
+
+    results.push({
+      idx: i,
+      SN_star: SN_needed,
+      SN_deficit,
+      D_min_in,
+      D_min_cm,
+      mr_used,
+      D_actual: layer.D,
+      ok: layer.D >= D_min_cm - 0.05  // tolerance 0.05 cm
+    });
+
+    // สะสม SN จาก D จริงที่กรอก (ไม่ใช่ D_min)
+    SN_accum += a * m * (layer.D / 2.54);
+  });
+
+  return results;
+}
+
+// ─── Render Results ───────────────────────────────────────
+function renderResult() {
+  const W18 = parseFloat(document.getElementById('W18').value) || 0;
+  const ZR  = parseFloat(document.getElementById('ZR').value) || -1.282;
+  const So  = parseFloat(document.getElementById('So').value) || 0.45;
+  const pi  = parseFloat(document.getElementById('pi').value) || 4.2;
+  const pt  = parseFloat(document.getElementById('pt').value) || 2.5;
+  const MR  = getMR();
+
+  if (W18 <= 0 || MR <= 0) return;
+
+  // SN required รวม (ใช้ MR subgrade)
+  const SN_req = calcSNRequired(W18, ZR, So, MR, pi, pt);
+
+  // SN provided จาก D จริง
+  let SN_prov = 0;
+  const layerContribs = layers.map((layer, idx) => {
+    const D_in  = layer.D / 2.54;
+    const contrib = layer.a * (layer.m || 1.0) * D_in;
+    SN_prov += contrib;
+    return { layer, contrib, D_in, idx };
+  });
+
+  const DPSI   = pi - pt;
+  const pass   = SN_prov >= SN_req;
+  const margin = SN_prov - SN_req;
+  const ratio  = SN_req > 0 ? (SN_prov / SN_req) * 100 : 0;
+  const W18_cap = layers.length > 0 ? calcW18fromSN(SN_prov, ZR, So, MR, pi, pt) / 1e6 : 0;
+
+  // Layer-by-layer D_min
+  const dminResults = calcLayerDmin(layers, W18, ZR, So, pi, pt, MR);
+  const allDminOk   = dminResults.length > 0 && dminResults.every(r => r.ok);
+
+  let html = '';
+
+  // ── Main verdict ──────────────────────────────────────
+  html += `
+  <div class="card">
+    <div class="card-title">Design Verdict</div>
+    <div class="sn-grid">
+      <div class="result-box">
+        <div class="result-label">SN Required</div>
+        <div class="result-value big">${SN_req.toFixed(2)}</div>
+      </div>
+      <div class="result-box ${layers.length > 0 ? (pass ? 'pass' : 'fail') : ''}">
+        <div class="result-label">SN Provided</div>
+        <div class="result-value big">${layers.length > 0 ? SN_prov.toFixed(2) : '—'}</div>
+      </div>
+    </div>`;
+
+  if (layers.length > 0) {
+    const overallOk = pass && allDminOk;
+    html += `
+    <div style="text-align:center; margin: 8px 0 4px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap">
+      <span class="status-badge ${pass ? 'pass' : 'fail'}">
+        SN ${pass ? '✓ PASS' : '✗ FAIL'} ${pass ? '+' : ''}${margin.toFixed(3)}
+      </span>
+      <span class="status-badge ${allDminOk ? 'pass' : 'fail'}">
+        D_min ${allDminOk ? '✓ OK' : '✗ NG'}
+      </span>
+    </div>`;
+  }
+  html += `</div>`;
+
+  // ── Design Parameters ────────────────────────────────
+  html += `
+  <div class="card">
+    <div class="card-title">Design Parameters</div>
+    <table class="info-table">
+      <tr><td>W18</td><td>${W18.toFixed(2)} M ESAL</td></tr>
+      <tr><td>MR (Subgrade)</td><td>${MR.toLocaleString('en',{maximumFractionDigits:0})} psi</td></tr>
+      <tr><td>ZR / So</td><td>${ZR.toFixed(3)} / ${So.toFixed(2)}</td></tr>
+      <tr><td>ΔPSI</td><td>${DPSI.toFixed(2)} (${pi.toFixed(1)} → ${pt.toFixed(1)})</td></tr>
+      <tr><td>SN Required</td><td>${SN_req.toFixed(3)}</td></tr>`;
+  if (layers.length > 0) {
+    html += `
+      <tr><td>SN Provided</td><td>${SN_prov.toFixed(3)}</td></tr>
+      <tr><td>SN Margin</td><td>${margin >= 0 ? '+' : ''}${margin.toFixed(3)} (${ratio.toFixed(1)}%)</td></tr>
+      <tr><td>W18 Capacity</td><td>${W18_cap.toFixed(2)} M ESAL</td></tr>`;
+  }
+  html += `</table></div>`;
+
+  // ── Layer-by-Layer D_min Table ───────────────────────
+  if (layers.length > 0) {
+    html += `
+    <div class="card">
+      <div class="card-title">Layer-by-Layer Analysis (Full AASHTO)</div>
+      <table class="info-table">
+        <tr>
+          <td style="color:var(--muted);font-size:10px">Layer</td>
+          <td style="color:var(--muted);font-size:10px;text-align:center">SN*</td>
+          <td style="color:var(--muted);font-size:10px;text-align:center">D_min</td>
+          <td style="color:var(--muted);font-size:10px;text-align:center">D_design</td>
+          <td style="color:var(--muted);font-size:10px;text-align:center">Status</td>
+        </tr>`;
+
+    dminResults.forEach((r, i) => {
+      const color   = COLORS[i % COLORS.length];
+      const mrMPa   = (r.mr_used / 145.038).toFixed(0);
+      const mrSrc   = (i === layers.length - 1) ? 'Subgrade' : `L${i+2} MR`;
+      html += `
+        <tr>
+          <td>
+            <span style="color:${color}">■</span> L${i+1}<br>
+            <span style="font-size:10px;color:var(--muted)">${mrSrc}=${mrMPa} MPa</span>
+          </td>
+          <td style="text-align:center">${r.SN_star.toFixed(3)}</td>
+          <td style="text-align:center;color:var(--accent2)">${r.D_min_cm.toFixed(1)} cm</td>
+          <td style="text-align:center">${r.D_actual.toFixed(1)} cm</td>
+          <td style="text-align:center">
+            <span style="color:${r.ok ? 'var(--green)' : 'var(--red)'}">
+              ${r.ok ? '✓' : '✗ NG'}
+            </span>
+          </td>
+        </tr>`;
+    });
+
+    html += `</table>
+      <div class="hint" style="margin-top:8px">
+        SN* = SN required ที่ top of layer นั้น · D_min = (SN* − SN_prev) / (a×m) · MR ใช้จาก library ของชั้นถัดไป
+      </div>
+    </div>`;
+
+    // ── SN Contribution ──────────────────────────────
+    html += `
+    <div class="card">
+      <div class="card-title">SN Contribution</div>
+      <table class="info-table">
+        <tr>
+          <td style="color:var(--muted);font-size:10px">Layer</td>
+          <td style="color:var(--muted);font-size:10px;text-align:right">a × m × D" = SN</td>
+        </tr>`;
+
+    layerContribs.forEach(({ layer, contrib, D_in, idx }) => {
+      const color = COLORS[idx % COLORS.length];
+      html += `
+        <tr>
+          <td><span style="color:${color}">■</span> L${idx+1}: ${layer.name.split(/\s+/).slice(0,3).join(' ')}</td>
+          <td style="text-align:right;font-size:11px">
+            ${layer.a.toFixed(2)}×${(layer.m||1).toFixed(2)}×${D_in.toFixed(2)}" = <strong>${contrib.toFixed(3)}</strong>
+          </td>
+        </tr>`;
+    });
+    html += `
+        <tr style="border-top:2px solid var(--accent)">
+          <td style="color:var(--accent);font-weight:600">Total SN</td>
+          <td style="text-align:right;color:var(--accent);font-weight:600">${SN_prov.toFixed(3)}</td>
+        </tr>
+      </table>`;
+
+    // Visual bars
+    html += `<div class="sn-bar-wrap">`;
+    layerContribs.forEach(({ layer, contrib, idx }) => {
+      const pct   = SN_prov > 0 ? (contrib / SN_prov) * 100 : 0;
+      const color = COLORS[idx % COLORS.length];
+      html += `
+      <div class="sn-bar-label">
+        <span>L${idx+1}: ${layer.name.split(/\s+/).slice(0,3).join(' ')}</span>
+        <span>${contrib.toFixed(3)} (${pct.toFixed(0)}%)</span>
+      </div>
+      <div class="sn-bar-bg">
+        <div class="sn-bar-fill" style="width:${pct}%;background:${color}"></div>
+      </div>`;
+    });
+    html += `</div></div>`;
+
+    // ── Thickness Summary ────────────────────────────
+    html += `
+    <div class="card">
+      <div class="card-title">Thickness Summary</div>
+      <table class="info-table">
+        <tr>
+          <td style="color:var(--muted);font-size:10px">Layer</td>
+          <td style="color:var(--muted);font-size:10px;text-align:center">D_min (cm)</td>
+          <td style="color:var(--muted);font-size:10px;text-align:center">D_design (cm)</td>
+          <td style="color:var(--muted);font-size:10px;text-align:center">Margin</td>
+        </tr>`;
+
+    let cumD = 0;
+    dminResults.forEach((r, i) => {
+      const color  = COLORS[i % COLORS.length];
+      const margin_d = r.D_actual - r.D_min_cm;
+      cumD += r.D_actual;
+      html += `
+        <tr>
+          <td><span style="color:${color}">■</span> L${i+1}: ${layers[i].name.split(/\s+/).slice(0,3).join(' ')}</td>
+          <td style="text-align:center;color:var(--accent2)">${r.D_min_cm.toFixed(1)}</td>
+          <td style="text-align:center">${r.D_actual.toFixed(1)}</td>
+          <td style="text-align:center;color:${r.ok ? 'var(--green)' : 'var(--red)'}">
+            ${margin_d >= 0 ? '+' : ''}${margin_d.toFixed(1)}
+          </td>
+        </tr>`;
+    });
+    html += `
+        <tr style="border-top:2px solid var(--accent)">
+          <td style="color:var(--accent);font-weight:600">Total</td>
+          <td style="text-align:center;color:var(--muted)">—</td>
+          <td style="text-align:center;color:var(--accent);font-weight:600">${cumD.toFixed(0)} cm</td>
+          <td></td>
+        </tr>
+      </table>
+    </div>`;
+
+  } else {
+    html += `
+    <div class="empty">
+      <div class="icon">📋</div>
+      ไปที่ Tab ② เพื่อกำหนด Layers
+    </div>`;
+  }
+
+  document.getElementById('resultContent').innerHTML = html;
+}
+
+// ─── Init ─────────────────────────────────────────────────
+updateMR();
+updateDPSI();
+</script>
+</body>
+</html>
