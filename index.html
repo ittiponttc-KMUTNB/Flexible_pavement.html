@@ -1312,9 +1312,9 @@ function generatePDF() {
   const W18_cap = layers.length > 0 ? calcW18fromSN(SN_prov, ZR, So, MR, pi, pt) / 1e6 : 0;
 
   // ── DOS Style Report ─────────────────────────────────
-  const ML = 15;   // margin left
-  const MR = 195;  // margin right
-  const LW = 180;  // line width
+  const ML = 15;      // margin left
+  const PAGE_R = 195; // margin right
+  const LW = 180;     // line width
   let y = 15;
 
   // helper: draw horizontal line
@@ -1330,7 +1330,7 @@ function generatePDF() {
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
     doc.text(label, ML, yy);
-    doc.text(value, MR, yy, { align: 'right' });
+    doc.text(value, PAGE_R, yy, { align: 'right' });
   }
 
   // ── HEADER ────────────────────────────────────────────
@@ -1350,7 +1350,7 @@ function generatePDF() {
   doc.setFont('courier', 'normal');
   doc.setFontSize(9);
   doc.text(`Project : ${projectName}`, ML, y);
-  doc.text(`Date    : ${now}`, MR, y, { align: 'right' });
+  doc.text(`Date    : ${now}`, PAGE_R, y, { align: 'right' });
   y += 5;
   hline(y, 0.5);
   y += 6;
@@ -1366,7 +1366,7 @@ function generatePDF() {
   const inputs = [
     ['W18 (Design ESAL)', `${W18.toFixed(2)} M ESAL`],
     ['CBR (Subgrade)', `${CBR.toFixed(2)} %`],
-    ['MR  (Subgrade)', `${MR.toLocaleString('en', {maximumFractionDigits:0})} psi`],
+    ['MR  (Subgrade)', `${getMR().toLocaleString('en', {maximumFractionDigits:0})} psi`],
     ['R / ZR / So', `${R}% / ${ZR.toFixed(3)} / ${So.toFixed(2)}`],
     ['pi / pt / DPSI', `${pi.toFixed(1)} / ${pt.toFixed(1)} / ${DPSI.toFixed(2)}`],
     ['SN Required', `${SN_req.toFixed(3)}`],
