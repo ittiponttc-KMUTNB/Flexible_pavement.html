@@ -1311,169 +1311,184 @@ function generatePDF() {
   const allDminOk = dminResults.length > 0 && dminResults.every(r => r.ok);
   const W18_cap = layers.length > 0 ? calcW18fromSN(SN_prov, ZR, So, MR, pi, pt) / 1e6 : 0;
 
-  const margin_l = 15, margin_r = 195;
+  // ── DOS Style Report ─────────────────────────────────
+  const ML = 15;   // margin left
+  const MR = 195;  // margin right
+  const LW = 180;  // line width
   let y = 15;
 
-  // ── Header ────────────────────────────────────────────
-  doc.setFillColor(26, 29, 39);
-  doc.rect(0, 0, 210, 30, 'F');
-  doc.setTextColor(240, 192, 64);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('FLEXIBLE PAVEMENT DESIGN — AASHTO 1993', margin_l, 12);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(155, 163, 200);
-  doc.text('Developed by Assoc.Prof.Dr.Ithipol Meepol · TTC · KMUTNB', margin_l, 19);
-  doc.text(`Date: ${now}`, margin_l, 25);
-
-  // ── Project ───────────────────────────────────────────
-  y = 38;
-  doc.setFillColor(34, 38, 54);
-  doc.rect(margin_l - 2, y - 5, 184, 10, 'F');
-  doc.setTextColor(240, 192, 64);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Project: ${projectName}`, margin_l, y);
-
-  // ── Verdict ───────────────────────────────────────────
-  y += 14;
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(79, 195, 247);
-  doc.text('DESIGN VERDICT', margin_l, y);
-
-  y += 6;
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-
-  // SN boxes
-  doc.setFillColor(34, 38, 54);
-  doc.rect(margin_l, y, 85, 16, 'F');
-  doc.rect(110, y, 85, 16, 'F');
-  doc.setTextColor(155, 163, 200);
-  doc.setFontSize(8);
-  doc.text('SN REQUIRED', margin_l + 3, y + 5);
-  doc.text('SN PROVIDED', 113, y + 5);
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(232, 234, 240);
-  doc.text(SN_req.toFixed(2), margin_l + 3, y + 13);
-  doc.setTextColor(pass ? 102 : 239, pass ? 187 : 83, pass ? 106 : 80);
-  doc.text(layers.length > 0 ? SN_prov.toFixed(2) : '—', 113, y + 13);
-
-  y += 22;
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  const snStatus = `SN: ${pass ? 'PASS' : 'FAIL'} (${margin >= 0 ? '+' : ''}${margin.toFixed(3)})`;
-  const dminStatus = `D_min: ${allDminOk ? 'OK' : 'NG'}`;
-  doc.setTextColor(pass ? 102 : 239, pass ? 187 : 83, pass ? 106 : 80);
-  doc.text(snStatus, margin_l, y);
-  doc.setTextColor(allDminOk ? 102 : 239, allDminOk ? 187 : 83, allDminOk ? 106 : 80);
-  doc.text(dminStatus, 110, y);
-
-  // ── Design Parameters ─────────────────────────────────
-  y += 10;
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(79, 195, 247);
-  doc.text('DESIGN PARAMETERS', margin_l, y);
-
-  y += 5;
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  const params = [
-    ['W18', `${W18.toFixed(2)} M ESAL`],
-    ['CBR (Subgrade)', `${CBR}%`],
-    ['MR (Subgrade)', `${MR.toLocaleString('en', {maximumFractionDigits:0})} psi`],
-    ['R / ZR / So', `${R}% / ${ZR.toFixed(3)} / ${So.toFixed(2)}`],
-    ['DPSI (pi → pt)', `${DPSI.toFixed(2)}  (${pi.toFixed(1)} → ${pt.toFixed(1)})`],
-    ['SN Required', SN_req.toFixed(3)],
-    ['SN Provided', layers.length > 0 ? SN_prov.toFixed(3) : '—'],
-    ['SN Margin', layers.length > 0 ? `${margin >= 0 ? '+' : ''}${margin.toFixed(3)} (${((SN_prov/SN_req)*100).toFixed(1)}%)` : '—'],
-    ['W18 Capacity', layers.length > 0 ? `${W18_cap.toFixed(2)} M ESAL` : '—'],
-  ];
-
-  params.forEach(([label, value], i) => {
-    const rowY = y + i * 6;
-    if (i % 2 === 0) {
-      doc.setFillColor(26, 29, 39);
-      doc.rect(margin_l - 2, rowY - 4, 184, 6, 'F');
-    }
-    doc.setTextColor(155, 163, 200);
-    doc.text(label, margin_l, rowY);
-    doc.setTextColor(232, 234, 240);
-    doc.setFont('helvetica', 'bold');
-    doc.text(value, margin_r, rowY, { align: 'right' });
-    doc.setFont('helvetica', 'normal');
-  });
-
-  // ── Layer Table ───────────────────────────────────────
-  if (layers.length > 0) {
-    y += params.length * 6 + 8;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(79, 195, 247);
-    doc.text('LAYER-BY-LAYER ANALYSIS', margin_l, y);
-
-    y += 5;
-    // Header row
-    doc.setFillColor(46, 51, 72);
-    doc.rect(margin_l - 2, y - 4, 184, 6, 'F');
-    doc.setFontSize(8);
-    doc.setTextColor(240, 192, 64);
-    doc.text('Layer / Material', margin_l, y);
-    doc.text('a', 105, y, {align:'center'});
-    doc.text('m', 118, y, {align:'center'});
-    doc.text('D_min(cm)', 138, y, {align:'center'});
-    doc.text('D_design(cm)', 162, y, {align:'center'});
-    doc.text('Status', 186, y, {align:'center'});
-
-    layers.forEach((layer, i) => {
-      y += 7;
-      const dr = dminResults[i];
-      if (i % 2 === 0) {
-        doc.setFillColor(26, 29, 39);
-        doc.rect(margin_l - 2, y - 4, 184, 7, 'F');
-      }
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(232, 234, 240);
-      doc.text(`L${i+1}: ${layer.pdfName || layer.name}`, margin_l, y);
-      doc.text(layer.a.toFixed(2), 105, y, {align:'center'});
-      doc.text((layer.m||1).toFixed(2), 118, y, {align:'center'});
-      doc.setTextColor(79, 195, 247);
-      doc.text(dr ? dr.D_min_cm.toFixed(1) : '—', 138, y, {align:'center'});
-      doc.setTextColor(232, 234, 240);
-      doc.text(layer.D.toFixed(1), 162, y, {align:'center'});
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(dr && dr.ok ? 102 : 239, dr && dr.ok ? 187 : 83, dr && dr.ok ? 106 : 80);
-      doc.text(dr ? (dr.ok ? 'PASS' : 'NG') : '—', 186, y, {align:'center'});
-    });
-
-    // Total row
-    y += 7;
-    doc.setFillColor(46, 51, 72);
-    doc.rect(margin_l - 2, y - 4, 184, 7, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(240, 192, 64);
-    const totalD = layers.reduce((s, l) => s + l.D, 0);
-    doc.text('TOTAL', margin_l, y);
-    doc.text(`${totalD.toFixed(0)} cm`, 162, y, {align:'center'});
-    doc.text(`SN = ${SN_prov.toFixed(3)}`, margin_r, y, {align:'right'});
+  // helper: draw horizontal line
+  function hline(yy, lw) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(lw || 0.3);
+    doc.line(ML, yy, ML + LW, yy);
   }
 
-  // ── Footer ────────────────────────────────────────────
-  doc.setFillColor(26, 29, 39);
-  doc.rect(0, 282, 210, 15, 'F');
+  // helper: row with label (left) and value (right), Courier font
+  function row(label, value, yy, bold) {
+    doc.setFont('courier', bold ? 'bold' : 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.text(label, ML, yy);
+    doc.text(value, MR, yy, { align: 'right' });
+  }
+
+  // ── HEADER ────────────────────────────────────────────
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(0, 0, 0);
+  doc.text('FLEXIBLE PAVEMENT DESIGN - AASHTO 1993', 105, y, { align: 'center' });
+  y += 6;
+  doc.setFontSize(9);
+  doc.setFont('courier', 'normal');
+  doc.text('Assoc.Prof.Dr.Ittipon Meepol  |  TTC-KMUTNB', 105, y, { align: 'center' });
+  y += 5;
+  hline(y, 0.5);
+  y += 5;
+
+  // ── PROJECT & DATE ────────────────────────────────────
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(9);
+  doc.text(`Project : ${projectName}`, ML, y);
+  doc.text(`Date    : ${now}`, MR, y, { align: 'right' });
+  y += 5;
+  hline(y, 0.5);
+  y += 6;
+
+  // ── DESIGN INPUT ──────────────────────────────────────
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(9);
+  doc.text('DESIGN INPUT', ML, y);
+  y += 4;
+  hline(y, 0.3);
+  y += 5;
+
+  const inputs = [
+    ['W18 (Design ESAL)', `${W18.toFixed(2)} M ESAL`],
+    ['CBR (Subgrade)', `${CBR.toFixed(2)} %`],
+    ['MR  (Subgrade)', `${MR.toLocaleString('en', {maximumFractionDigits:0})} psi`],
+    ['R / ZR / So', `${R}% / ${ZR.toFixed(3)} / ${So.toFixed(2)}`],
+    ['pi / pt / DPSI', `${pi.toFixed(1)} / ${pt.toFixed(1)} / ${DPSI.toFixed(2)}`],
+    ['SN Required', `${SN_req.toFixed(3)}`],
+  ];
+
+  inputs.forEach(([label, value]) => {
+    row(label, value, y, false);
+    y += 6;
+  });
+
+  hline(y, 0.3);
+  y += 6;
+
+  // ── LAYER DESIGN ──────────────────────────────────────
+  if (layers.length > 0) {
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.text('LAYER DESIGN', ML, y);
+    y += 4;
+    hline(y, 0.3);
+    y += 5;
+
+    // Column positions
+    const C = {
+      no:     ML,
+      mat:    ML + 8,
+      ai:     ML + 90,
+      mi:     ML + 105,
+      diIn:   ML + 120,
+      diCm:   ML + 135,
+      dsni:   ML + 152,
+      accSN:  ML + 170,
+    };
+
+    // Header
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(8);
+    doc.text('No', C.no, y);
+    doc.text('Material', C.mat, y);
+    doc.text('ai', C.ai, y, { align: 'right' });
+    doc.text('mi', C.mi, y, { align: 'right' });
+    doc.text('Di(in)', C.diIn, y, { align: 'right' });
+    doc.text('Di(cm)', C.diCm, y, { align: 'right' });
+    doc.text('DSNi', C.dsni, y, { align: 'right' });
+    doc.text('ACC.SN', C.accSN, y, { align: 'right' });
+    y += 3;
+    hline(y, 0.3);
+    y += 5;
+
+    // Layer rows
+    let accSN = 0;
+    let totalDcm = 0;
+    let totalDin = 0;
+
+    layers.forEach((layer, i) => {
+      const D_in = layer.D / 2.54;
+      const dsni = layer.a * (layer.m || 1) * D_in;
+      accSN += dsni;
+      totalDcm += layer.D;
+      totalDin += D_in;
+
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`${i + 1}`, C.no, y);
+      // truncate material name to fit
+      const matName = (layer.pdfName || layer.name).substring(0, 32);
+      doc.text(matName, C.mat, y);
+      doc.text(layer.a.toFixed(2), C.ai, y, { align: 'right' });
+      doc.text((layer.m || 1).toFixed(2), C.mi, y, { align: 'right' });
+      doc.text(D_in.toFixed(2), C.diIn, y, { align: 'right' });
+      doc.text(layer.D.toFixed(1), C.diCm, y, { align: 'right' });
+      doc.text(dsni.toFixed(3), C.dsni, y, { align: 'right' });
+      doc.text(accSN.toFixed(3), C.accSN, y, { align: 'right' });
+      y += 6;
+    });
+
+    hline(y, 0.3);
+    y += 5;
+
+    // Total row
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(8);
+    doc.text('TOTAL', C.no, y);
+    doc.text(totalDin.toFixed(2), C.diIn, y, { align: 'right' });
+    doc.text(totalDcm.toFixed(1), C.diCm, y, { align: 'right' });
+    doc.text(accSN.toFixed(3), C.accSN, y, { align: 'right' });
+    y += 4;
+    hline(y, 0.5);
+    y += 7;
+
+    // ── SUMMARY ───────────────────────────────────────────
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`SN Required  =  ${SN_req.toFixed(3)}`, ML, y);
+    doc.text(`SN Provided  =  ${SN_prov.toFixed(3)}`, 105, y);
+    y += 6;
+    doc.text(`SN Margin    =  ${margin >= 0 ? '+' : ''}${margin.toFixed(3)}`, ML, y);
+    doc.text(`W18 Capacity =  ${W18_cap.toFixed(2)} M ESAL`, 105, y);
+    y += 5;
+    hline(y, 0.5);
+    y += 6;
+
+    // STATUS
+    doc.setFontSize(11);
+    const statusText = `STATUS : ${pass && allDminOk ? 'PASS' : 'FAIL'}`;
+    doc.setTextColor(pass && allDminOk ? 0 : 180, 0, 0);
+    doc.text(statusText, 105, y, { align: 'center' });
+    y += 4;
+    hline(y, 0.5);
+  }
+
+  // ── FOOTER ────────────────────────────────────────────
+  doc.setFont('courier', 'normal');
   doc.setFontSize(7);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(107, 113, 148);
-  doc.text('AASHTO Guide for Design of Pavement Structures (1993) · TTC-KMUTNB · Flexible Pavement Design Tool', 105, 289, {align:'center'});
+  doc.setTextColor(100, 100, 100);
+  doc.text('AASHTO Guide for Design of Pavement Structures (1993)  |  TTC-KMUTNB  |  Flexible Pavement Design', 105, 290, { align: 'center' });
 
   // Save
-  const filename = projectName.replace(/\s+/g, '_') || 'Flexible_Pavement';
+  const filename = projectName.replace(/[^a-zA-Z0-9]/g, '_') || 'Flexible_Pavement';
   doc.save(`${filename}_AASHTO1993.pdf`);
 }
 
